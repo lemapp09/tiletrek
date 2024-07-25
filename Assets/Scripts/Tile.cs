@@ -1,7 +1,6 @@
 using UnityEngine;
-
-// Basic Tile Script
-using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
 
 public class Tile : MonoBehaviour
 {
@@ -9,57 +8,73 @@ public class Tile : MonoBehaviour
     public int y;
     public bool isMatched = false;
     private Board board;
-    private static Tile selectedTile = null;
+    private static Tile firstSelectedTile = null;
+    private static Tile secondSelectedTile = null;
+    private Image image;
+    private Button button;
 
     private void Start()
     {
         board = FindObjectOfType<Board>();
+        image = GetComponent<Image>();
+        button = GetComponent<Button>();
+        button.onClick.AddListener(OnTileClick);
     }
 
-    private void OnMouseDown()
+    private void OnTileClick()
     {
-        // If no tile is currently selected
-        if (selectedTile == null)
+        if (isMatched || firstSelectedTile == this)
+            return;
+
+        if (firstSelectedTile == null)
         {
-            // Select this tile
-            selectedTile = this;
-            // Optionally, highlight the selected tile visually
-            // e.g., change the tile's color or outline
+            // First tile selected
+            firstSelectedTile = this;
+            HighlightTile();
+        }
+        else if (secondSelectedTile == null)
+        {
+            // Second tile selected
+            secondSelectedTile = this;
+            HighlightTile();
+            StartCoroutine(CheckMatch());
+        }
+    }
+
+    private void HighlightTile()
+    {
+        // Optionally change the tile's appearance to indicate it's selected
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 0.5f); // Example: change transparency
+    }
+
+    private void ResetTile()
+    {
+        // Reset the tile's appearance
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 1f); // Example: reset transparency
+    }
+
+    private IEnumerator CheckMatch()
+    {
+        yield return new WaitForSeconds(0.5f); // Pause to let player see the second tile
+
+        if (firstSelectedTile.image.sprite == secondSelectedTile.image.sprite)
+        {
+            // Tiles match, remove them
+            firstSelectedTile.isMatched = true;
+            secondSelectedTile.isMatched = true;
+            firstSelectedTile.gameObject.SetActive(false);
+            secondSelectedTile.gameObject.SetActive(false);
+            board.CheckIfGameWon(); // Check if the game is won
         }
         else
         {
-            // Swap the selected tile with this tile
-            SwapTiles(selectedTile);
-            selectedTile.CheckMatch();
-            CheckMatch();
-            
-            // Deselect the selected tile
-            selectedTile = null;
+            // Tiles don't match, reset them
+            firstSelectedTile.ResetTile();
+            secondSelectedTile.ResetTile();
         }
-    }
 
-    public void SwapTiles(Tile otherTile)
-    {
-        // Swap the positions in the board array
-        int tempX = otherTile.x;
-        int tempY = otherTile.y;
-        otherTile.x = this.x;
-        otherTile.y = this.y;
-        this.x = tempX;
-        this.y = tempY;
-
-        // Swap the positions in the Unity scene
-        Vector3 tempPosition = otherTile.transform.position;
-        otherTile.transform.position = this.transform.position;
-        this.transform.position = tempPosition;
-    }
-
-    private void CheckMatch()
-    {
-        // Match-checking logic
-        if (board != null)
-        {
-            isMatched = board.CheckForMatch(this);
-        }
+        // Reset the selected tiles
+        firstSelectedTile = null;
+        secondSelectedTile = null;
     }
 }

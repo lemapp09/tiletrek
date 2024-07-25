@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 public class Board : MonoBehaviour
 {
@@ -9,11 +10,13 @@ public class Board : MonoBehaviour
     public int height = 8; // Set to 8 to fit the 6x8 grid
     public GameObject[] tilePrefabs; // Array of Tile UI prefabs
     public RectTransform gameBoard; // Reference to the GameBoard panel
+    public TMP_Text gameWonText; // Reference to the GameWon text element
 
     private void Start()
     {
         tiles = new Tile[width, height];
         InitializeBoard();
+        gameWonText.gameObject.SetActive(false); // Hide the GameWon text at the start
     }
 
     private void InitializeBoard()
@@ -86,5 +89,19 @@ public class Board : MonoBehaviour
         // Add your match-checking logic here
         // This could involve checking the rows and columns for matches of 3 or more tiles of the same type
         return false; // Placeholder return value
+    }
+
+    public void CheckIfGameWon()
+    {
+        foreach (var tile in tiles)
+        {
+            if (!tile.isMatched)
+            {
+                return; // If any tile is not matched, return early
+            }
+        }
+
+        // All tiles are matched
+        gameWonText.gameObject.SetActive(true);
     }
 }
